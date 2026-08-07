@@ -1,0 +1,1664 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>סופר-קל | רשימת קניות חכמה</title>
+
+    <!-- PWA -->
+    <link rel="manifest" href="./manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="סופר-קל">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="./icons/icon-512.png">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        skyBrand: {
+                            50: '#faf5ff',
+                            100: '#f3e8ff',
+                            400: '#c084fc',
+                            500: '#a855f7',
+                            600: '#9333ea',
+                            700: '#7e22ce',
+                        },
+                        darkBrand: '#0f172a',
+                    },
+                    fontFamily: {
+                        sans: ['Heebo', 'Rubik', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Heebo', sans-serif;
+            background-color: #f8fafc;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 4px;
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+        }
+        
+        .modal-backdrop {
+            background-color: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+        }
+
+        .checkbox-bounce {
+            transition: transform 0.15s ease-in-out;
+        }
+        .checkbox-bounce:active {
+            transform: scale(0.85);
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .animate-slide-up {
+            animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.2s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="text-slate-800 bg-slate-50 min-h-screen flex flex-col selection:bg-skyBrand-500 selection:text-white">
+
+    <!-- App Main Wrapper -->
+    <div id="app" class="max-w-md mx-auto w-full min-h-screen flex flex-col bg-white shadow-2xl relative border-x border-slate-100">
+        
+        <!-- Welcome & Onboarding Screen (Initial Screen) -->
+        <div id="welcomeScreen" class="min-h-screen flex flex-col justify-between p-6 bg-gradient-to-b from-slate-900 via-slate-800 to-darkBrand text-white relative z-50">
+            
+            <!-- Logo & Brand Header -->
+            <div class="pt-6 text-center">
+                <div class="w-16 h-16 rounded-2xl overflow-hidden mx-auto shadow-xl shadow-skyBrand-500/30 mb-3 animate-bounce">
+                    <img src="./icons/icon-192.png" alt="סופר-קל" class="w-full h-full object-cover">
+                </div>
+                <h1 class="text-3xl font-black tracking-tight text-white mb-1">סופר-קל</h1>
+                <p class="text-xs text-skyBrand-400 font-medium tracking-wide">רשימת קניות חכמה ומשותפת בזמן אמת</p>
+            </div>
+
+            <!-- Form Card -->
+            <div class="bg-slate-800/90 backdrop-blur-md p-6 rounded-3xl border border-slate-700/80 shadow-2xl my-auto">
+                <h2 class="text-lg font-bold text-white mb-1 text-center">ברוכים הבאים!</h2>
+                <p class="text-xs text-slate-400 text-center mb-5">הכניסו שם או דוא״ל כדי להתחיל לחלוק רשימות קניות</p>
+
+                <!-- Auth Options Tabs -->
+                <div class="flex bg-slate-900/80 p-1 rounded-xl mb-4 border border-slate-700/50">
+                    <button type="button" onclick="switchAuthTab('quick')" id="tabQuickBtn" class="flex-1 py-2 text-xs font-bold rounded-lg transition bg-skyBrand-500 text-white shadow">כניסה מהירה</button>
+                    <button type="button" onclick="switchAuthTab('email')" id="tabEmailBtn" class="flex-1 py-2 text-xs font-bold rounded-lg transition text-slate-400 hover:text-white">הרשמה בדוא״ל</button>
+                </div>
+
+                <!-- Quick Name Form -->
+                <form id="quickAuthForm" onsubmit="handleQuickAuth(event)" class="space-y-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 mb-1">איך לקרוא לך? (שם / כינוי)</label>
+                        <input type="text" id="quickNameInput" required placeholder="לדוגמה: אמא, דני, יוסי..." class="w-full bg-slate-900/90 border border-slate-700 rounded-xl py-2.5 px-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-skyBrand-500">
+                    </div>
+                    <button type="submit" class="w-full bg-skyBrand-500 hover:bg-skyBrand-600 text-white font-bold py-3 rounded-xl transition shadow-lg active:scale-[0.98] text-sm flex items-center justify-center gap-2">
+                        <span>התחל להשתמש באפליקציה</span>
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </button>
+                </form>
+
+                <!-- Email Auth Form -->
+                <form id="emailAuthForm" onsubmit="handleEmailAuth(event)" class="space-y-3 hidden">
+                    <input type="text" id="authDisplayNameWelcome" placeholder="שם מלא / כינוי לבני הבית" required class="w-full bg-slate-900/90 border border-slate-700 rounded-xl py-2.5 px-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-skyBrand-500">
+                    <input type="email" id="authEmailWelcome" placeholder="דוא״ל" required class="w-full bg-slate-900/90 border border-slate-700 rounded-xl py-2.5 px-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-skyBrand-500">
+                    <input type="password" id="authPasswordWelcome" placeholder="סיסמה" required class="w-full bg-slate-900/90 border border-slate-700 rounded-xl py-2.5 px-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-skyBrand-500">
+                    
+                    <button type="submit" class="w-full bg-skyBrand-500 hover:bg-skyBrand-600 text-white font-bold py-2.5 rounded-xl transition text-sm shadow">
+                        הרשמה / התחברות
+                    </button>
+                </form>
+
+                <!-- Divider -->
+                <div class="relative flex py-3 items-center">
+                    <div class="flex-grow border-t border-slate-700"></div>
+                    <span class="flex-shrink mx-3 text-slate-500 text-[11px]">או</span>
+                    <div class="flex-grow border-t border-slate-700"></div>
+                </div>
+
+                <!-- Google Login Button -->
+                <button onclick="handleGoogleAuth()" type="button" class="w-full bg-slate-900/80 border border-slate-700 hover:bg-slate-700/50 text-white font-bold py-2.5 rounded-xl transition text-xs flex items-center justify-center gap-2">
+                    <i class="fa-brands fa-google text-red-400 text-sm"></i>
+                    <span>התחברות עם Google</span>
+                </button>
+
+                <!-- Google Auth Notice (Shows when popup is blocked/unauthorized in iframe preview) -->
+                <div id="googleAuthNotice" class="hidden mt-3 p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl text-xs text-amber-200 leading-relaxed text-right space-y-1.5">
+                    <div class="font-bold flex items-center gap-1.5 text-amber-400">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <span>התחברות בגוגל נחסמה בסביבה זו</span>
+                    </div>
+                    <p class="text-[11px] text-slate-300">
+                        התחברות עם Google דורשת דומיין מורשה (Authorized Domain) ב-Firebase. בתצוגה מקדימה זו מומלץ להשתמש ב<b>כניסה מהירה</b> עם שם או ב<b>הרשמה בדוא״ל</b>.
+                    </p>
+                    <button type="button" onclick="switchAuthTab('quick')" class="w-full mt-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold py-1.5 rounded-lg text-xs transition text-center border border-amber-500/30">
+                        עבור לכניסה מהירה בשם
+                    </button>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="pb-4 text-center text-slate-500 text-[11px]">
+                סופר-קל &copy; ניהול רשימות קניות משותפות בקלות
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div id="mainAppContent" class="hidden flex-1 flex flex-col pb-28 relative">
+            
+            <!-- Header -->
+            <header class="sticky top-0 z-30 bg-darkBrand text-white px-4 py-3.5 shadow-md">
+                <div class="flex items-center justify-between">
+                    <!-- Brand & Logo -->
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-10 h-10 rounded-xl overflow-hidden shadow-lg shadow-skyBrand-500/30">
+                            <img src="./icons/icon-192.png" alt="סופר-קל" class="w-full h-full object-cover">
+                        </div>
+                        <div>
+                            <h1 class="font-extrabold text-lg tracking-tight leading-none text-white">סופר-קל</h1>
+                            <span id="headerSubtitle" class="text-[11px] text-skyBrand-400 font-medium tracking-wide">רשימת קניות משותפת</span>
+                        </div>
+                    </div>
+
+                    <!-- Action Controls -->
+                    <div class="flex items-center gap-1.5">
+                        <!-- Share List Button -->
+                        <button id="btnShareList" onclick="openShareModal()" title="שתף רשימה זו" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-skyBrand-400 flex items-center justify-center transition active:scale-95 border border-slate-700">
+                            <i class="fa-solid fa-user-plus text-sm"></i>
+                        </button>
+                        <!-- Settings Button -->
+                        <button id="btnSettings" onclick="openSettingsModal()" title="הגדרות" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center justify-center transition active:scale-95 border border-slate-700">
+                            <i class="fa-solid fa-gear text-sm"></i>
+                        </button>
+                        <!-- Profile Avatar / Switch Account -->
+                        <button id="btnProfile" onclick="openAuthModal()" class="w-9 h-9 rounded-xl bg-skyBrand-600 text-white font-bold text-xs flex items-center justify-center transition active:scale-95 border border-skyBrand-400/30 shadow-inner">
+                            <span id="headerUserInitials">?</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- List Switcher Dropdown / Bar -->
+                <div class="mt-3.5 flex items-center gap-2 pt-2 border-t border-slate-800">
+                    <div class="relative flex-1">
+                        <select id="listSelect" onchange="switchList(this.value)" class="w-full bg-slate-800 text-slate-100 text-sm font-semibold py-2 px-3 pl-8 rounded-xl border border-slate-700 focus:outline-none focus:border-skyBrand-500 appearance-none cursor-pointer">
+                            <!-- Populated dynamically -->
+                        </select>
+                        <i class="fa-solid fa-chevron-down absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+                    </div>
+                    <button onclick="openEditListModal()" title="ערוך שם רשימה" class="bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 w-9 h-9 rounded-xl flex items-center justify-center transition border border-slate-700 flex-shrink-0">
+                        <i class="fa-solid fa-pen text-xs"></i>
+                    </button>
+                    <button onclick="confirmDeleteCurrentList()" title="מחק רשימה" class="bg-slate-800 hover:bg-red-900/60 active:scale-95 text-red-400 w-9 h-9 rounded-xl flex items-center justify-center transition border border-slate-700 hover:border-red-800 flex-shrink-0">
+                        <i class="fa-regular fa-trash-can text-xs"></i>
+                    </button>
+                    <button onclick="openCreateListModal()" title="רשימה חדשה" class="bg-skyBrand-500 hover:bg-skyBrand-600 active:scale-95 text-white text-xs font-bold px-3 py-2 rounded-xl flex items-center gap-1.5 transition shadow-sm flex-shrink-0">
+                        <i class="fa-solid fa-plus"></i>
+                        <span>חדשה</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Filter Categories Scroll Bar -->
+            <div class="bg-slate-100 border-b border-slate-200/80 p-2.5 overflow-x-auto custom-scrollbar flex items-center gap-2 sticky top-[108px] z-20">
+                <button onclick="setCategoryFilter('all')" data-cat="all" class="cat-pill px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition bg-darkBrand text-white shadow-sm">
+                    הכל
+                </button>
+                <button onclick="setCategoryFilter('ירקות ופירות')" data-cat="ירקות ופירות" class="cat-pill px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition bg-white text-slate-600 hover:bg-slate-200 border border-slate-200">
+                    🥦 ירקות ופירות
+                </button>
+                <button onclick="setCategoryFilter('לחמים')" data-cat="לחמים" class="cat-pill px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition bg-white text-slate-600 hover:bg-slate-200 border border-slate-200">
+                    🍞 לחמים
+                </button>
+                <button onclick="setCategoryFilter('בשר')" data-cat="בשר" class="cat-pill px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition bg-white text-slate-600 hover:bg-slate-200 border border-slate-200">
+                    🥩 בשר
+                </button>
+                <button onclick="setCategoryFilter('דגים')" data-cat="דגים" class="cat-pill px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition bg-white text-slate-600 hover:bg-slate-200 border border-slate-200">
+                    🐟 דגים
+                </button>
+                <button onclick="setCategoryFilter('קפואים')" data-cat="קפואים" class="cat-pill px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition bg-white text-slate-600 hover:bg-slate-200 border border-slate-200">
+                    🧊 קפואים
+                </button>
+                <button onclick="setCategoryFilter('גבינות')" data-cat="גבינות" class="cat-pill px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition bg-white text-slate-600 hover:bg-slate-200 border border-slate-200">
+                    🧀 גבינות
+                </button>
+                <button onclick="setCategoryFilter('חטיפים')" data-cat="חטיפים" class="cat-pill px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition bg-white text-slate-600 hover:bg-slate-200 border border-slate-200">
+                    🍿 חטיפים
+                </button>
+                <button onclick="setCategoryFilter('אחר')" data-cat="אחר" class="cat-pill px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition bg-white text-slate-600 hover:bg-slate-200 border border-slate-200">
+                    📦 אחר
+                </button>
+            </div>
+
+            <!-- Main Items Display Area -->
+            <main class="flex-1 px-4 py-4 space-y-6">
+
+                <!-- Sync Loader -->
+                <div id="syncLoader" class="flex justify-center items-center py-8">
+                    <div class="inline-flex items-center gap-2 px-4 py-2 bg-skyBrand-50 text-skyBrand-700 rounded-full text-xs font-semibold animate-pulse border border-skyBrand-200">
+                        <i class="fa-solid fa-rotate spin text-skyBrand-500"></i>
+                        <span>סנכרון נתונים...</span>
+                    </div>
+                </div>
+
+                <!-- View-Only Banner (shown when admin is viewing someone else's list) -->
+                <div id="viewOnlyBanner" class="hidden mb-3 px-3 py-2 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-700 font-bold flex items-center gap-2">
+                    <i class="fa-solid fa-eye"></i>
+                    <span>צפייה בלבד - זו רשימה של משתמש אחר, לא ניתן לערוך</span>
+                </div>
+
+                <!-- Pending Grocery Items Section -->
+                <section id="pendingSection" class="hidden">
+                    <div class="flex items-center justify-between mb-3 px-1">
+                        <h2 class="text-sm font-bold text-darkBrand tracking-tight flex items-center gap-2">
+                            <span>מצרכים לרכישה</span>
+                            <span id="pendingBadge" class="bg-skyBrand-500 text-white text-[11px] font-extrabold px-2 py-0.5 rounded-full">0</span>
+                        </h2>
+                        <span id="filterLabel" class="text-xs font-medium text-slate-400"></span>
+                    </div>
+
+                    <!-- Empty State -->
+                    <div id="emptyState" class="hidden text-center py-12 px-4 bg-slate-50/80 rounded-3xl border-2 border-dashed border-slate-200">
+                        <div class="w-16 h-16 bg-skyBrand-100 text-skyBrand-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-inner">
+                            <i class="fa-solid fa-basket-shopping text-2xl"></i>
+                        </div>
+                        <h3 class="font-bold text-slate-700 text-base mb-1">הרשימה ריקה</h3>
+                        <p class="text-xs text-slate-500 max-w-[220px] mx-auto leading-relaxed">
+                            לחצו על כפתור הפלוס (<span class="font-bold text-skyBrand-600">+</span>) למטה כדי להוסיף מצרכים לרשימה!
+                        </p>
+                    </div>
+
+                    <!-- Active Items Container -->
+                    <div id="pendingList" class="space-y-2.5">
+                        <!-- Populated dynamically -->
+                    </div>
+                </section>
+
+                <!-- In-Cart / Completed Items Section -->
+                <section id="inCartSection" class="hidden pt-2 border-t border-slate-200">
+                    <button onclick="toggleInCartVisibility()" class="w-full flex items-center justify-between py-2 px-1 text-slate-500 hover:text-darkBrand transition">
+                        <div class="flex items-center gap-2">
+                            <i id="inCartChevron" class="fa-solid fa-chevron-down text-xs transition-transform duration-200"></i>
+                            <h2 class="text-xs font-bold uppercase tracking-wider">בעגלה</h2>
+                            <span id="inCartBadge" class="bg-slate-200 text-slate-700 text-[11px] font-bold px-2 py-0.5 rounded-full">0</span>
+                        </div>
+                        <span class="text-[11px] text-skyBrand-600 font-semibold hover:underline">הצג / הסתר</span>
+                    </button>
+
+                    <div id="inCartList" class="space-y-2 mt-2 transition-all">
+                        <!-- Populated dynamically -->
+                    </div>
+                </section>
+
+            </main>
+
+            <!-- Floating Action Button (FAB) -->
+            <button id="fabBtn" onclick="openAddItemModal()" class="fixed bottom-6 left-6 z-40 w-14 h-14 bg-skyBrand-500 hover:bg-skyBrand-600 text-white rounded-2xl shadow-xl shadow-skyBrand-500/40 flex items-center justify-center text-2xl font-bold transition-all duration-200 hover:scale-105 active:scale-95 border-2 border-white">
+                <i class="fa-solid fa-plus"></i>
+            </button>
+        </div>
+
+        <!-- Add Item Modal Bottom Sheet -->
+        <div id="addItemModal" class="fixed inset-0 z-50 modal-backdrop hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
+            <div class="bg-white w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl animate-slide-up relative">
+                
+                <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
+                    <div class="flex items-center gap-2">
+                        <div id="itemModalIconWrap" class="w-8 h-8 rounded-lg bg-skyBrand-100 text-skyBrand-600 flex items-center justify-center text-sm font-bold">
+                            <i id="itemModalIcon" class="fa-solid fa-cart-plus"></i>
+                        </div>
+                        <h3 id="itemModalTitle" class="font-bold text-slate-800 text-lg">הוספת מוצר לרשימה</h3>
+                    </div>
+                    <button onclick="closeAddItemModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <form id="addItemForm" onsubmit="handleAddItem(event)" class="space-y-4">
+                    <!-- Product Name -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">שם המוצר <span class="text-red-500">*</span></label>
+                        <input type="text" id="itemName" required placeholder="למשל: חלב 3%, עגבניות..." oninput="handleItemNameInput(this.value)" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-sm focus:outline-none focus:border-skyBrand-500 focus:bg-white transition">
+                    </div>
+
+                    <!-- Category & Quantity Row -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <!-- Category Select -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">קטגוריה</label>
+                            <select id="itemCategory" onchange="markCategoryManual()" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-sm focus:outline-none focus:border-skyBrand-500 focus:bg-white transition">
+                                <option value="ירקות ופירות">🥦 ירקות ופירות</option>
+                                <option value="לחמים">🍞 לחמים</option>
+                                <option value="בשר">🥩 בשר</option>
+                                <option value="דגים">🐟 דגים</option>
+                                <option value="קפואים">🧊 קפואים</option>
+                                <option value="גבינות">🧀 גבינות</option>
+                                <option value="חטיפים">🍿 חטיפים</option>
+                                <option value="אחר" selected>📦 אחר</option>
+                            </select>
+                        </div>
+                        <!-- Quantity -->
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">כמות / יחידות</label>
+                            <input type="text" id="itemQuantity" placeholder="1 יח' / 1 ק״ג..." class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-sm focus:outline-none focus:border-skyBrand-500 focus:bg-white transition">
+                        </div>
+                    </div>
+
+                    <!-- Notes -->
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">הערות נוספות</label>
+                        <textarea id="itemNotes" rows="2" placeholder="לדוגמה: לקנות רק במבצע, ממותג מסוים..." class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-sm focus:outline-none focus:border-skyBrand-500 focus:bg-white transition resize-none"></textarea>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="w-full bg-darkBrand hover:bg-slate-800 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition active:scale-[0.98] flex items-center justify-center gap-2 mt-2">
+                        <i id="itemModalSubmitIcon" class="fa-solid fa-plus text-skyBrand-400"></i>
+                        <span id="itemModalSubmitText">הוסף לרשימה</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Share / Join Modal -->
+        <div id="shareModal" class="fixed inset-0 z-50 modal-backdrop hidden flex items-center justify-center p-4">
+            <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl relative animate-fade-in">
+                <button onclick="closeShareModal()" class="absolute top-4 left-4 w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+
+                <div class="text-center mb-5">
+                    <div class="w-12 h-12 bg-skyBrand-100 text-skyBrand-600 rounded-2xl flex items-center justify-center mx-auto mb-2 text-xl font-bold">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                    <h3 class="font-bold text-slate-800 text-lg">שת״פ משפחתי</h3>
+                    <p class="text-xs text-slate-500 mt-1">שתף רשימה זו עם בני הבית לעדכון בזמן אמת!</p>
+                </div>
+
+                <!-- Current List Code -->
+                <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 mb-4 text-center">
+                    <span class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">קוד הרשימה הנוכחית</span>
+                    <div class="flex items-center justify-center gap-2">
+                        <span id="currentListCode" class="font-mono text-base font-extrabold text-darkBrand select-all">-------</span>
+                        <button onclick="copyListCode()" title="העתק קוד" class="text-skyBrand-600 hover:text-skyBrand-700 p-1">
+                            <i class="fa-regular fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Share via WhatsApp / Email -->
+                <div class="grid grid-cols-2 gap-2.5 mb-5">
+                    <button onclick="shareViaWhatsApp()" class="flex items-center justify-center gap-2 bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#128C4A] font-bold py-2.5 rounded-xl transition text-xs border border-[#25D366]/30">
+                        <i class="fa-brands fa-whatsapp text-sm"></i>
+                        <span>וואטסאפ</span>
+                    </button>
+                    <button onclick="shareViaEmail()" class="flex items-center justify-center gap-2 bg-skyBrand-50 hover:bg-skyBrand-100 text-skyBrand-700 font-bold py-2.5 rounded-xl transition text-xs border border-skyBrand-200">
+                        <i class="fa-solid fa-envelope text-sm"></i>
+                        <span>אימייל</span>
+                    </button>
+                </div>
+
+                <div class="relative flex py-2 items-center">
+                    <div class="flex-grow border-t border-slate-200"></div>
+                    <span class="flex-shrink mx-3 text-slate-400 text-xs font-medium">או הצטרף לרשימה קיימת</span>
+                    <div class="flex-grow border-t border-slate-200"></div>
+                </div>
+
+                <!-- Join Code Form -->
+                <form onsubmit="handleJoinList(event)" class="mt-3 space-y-3">
+                    <input type="text" id="joinCodeInput" required placeholder="הזן קוד רשימה שקיבלת..." class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-sm text-center font-mono focus:outline-none focus:border-skyBrand-500 uppercase">
+                    <button type="submit" class="w-full bg-skyBrand-500 hover:bg-skyBrand-600 text-white font-bold py-2.5 rounded-xl transition active:scale-[0.98] text-sm">
+                        הצטרף לרשימה
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div id="settingsModal" class="fixed inset-0 z-50 modal-backdrop hidden flex items-center justify-center p-4">
+            <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl relative animate-fade-in">
+                <button onclick="closeSettingsModal()" class="absolute top-4 left-4 w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+
+                <h3 class="font-bold text-slate-800 text-lg mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-skyBrand-500"></i>
+                    <span>הגדרות האפליקציה</span>
+                </h3>
+
+                <div class="space-y-4">
+                    <!-- Toggle Show Added By Icon -->
+                    <div class="flex items-center justify-between p-3 bg-slate-50 rounded-2xl border border-slate-200">
+                        <div>
+                            <span class="block text-sm font-bold text-slate-700">הצג מי הוסיף כל מוצר</span>
+                            <span class="block text-[11px] text-slate-500">אייקון עם תמונת/אות הוסיף ליד המוצר</span>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="toggleShowAddedBy" onchange="handleToggleAddedBy(this.checked)" class="sr-only peer" checked>
+                            <div class="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:-translate-x-0 rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-skyBrand-500"></div>
+                        </label>
+                    </div>
+
+                    <!-- Delete Current List Option -->
+                    <div class="p-3 bg-red-50 rounded-2xl border border-red-100 flex items-center justify-between">
+                        <div>
+                            <span class="block text-xs font-bold text-red-700">מחק את הרשימה הנוכחית</span>
+                            <span class="block text-[10px] text-red-500">פעולה זו בלתי הפיכה</span>
+                        </div>
+                        <button onclick="confirmDeleteCurrentList()" class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl transition">
+                            מחק
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create List Modal -->
+        <div id="createListModal" class="fixed inset-0 z-50 modal-backdrop hidden flex items-center justify-center p-4">
+            <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl relative animate-fade-in">
+                <button onclick="closeCreateListModal()" class="absolute top-4 left-4 w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+
+                <div class="text-center mb-4">
+                    <div id="listModalIconWrap" class="w-12 h-12 bg-skyBrand-100 text-skyBrand-600 rounded-2xl flex items-center justify-center mx-auto mb-2 text-xl font-bold">
+                        <i id="listModalIcon" class="fa-solid fa-list-check"></i>
+                    </div>
+                    <h3 id="listModalTitle" class="font-bold text-slate-800 text-lg">יצירת רשימה חדשה</h3>
+                    <p id="listModalSubtitle" class="text-xs text-slate-500 mt-1">הזן שם עבור רשימת הקניות החדשה שלך</p>
+                </div>
+
+                <form onsubmit="handleCreateList(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-600 mb-1">שם הרשימה <span class="text-red-500">*</span></label>
+                        <input type="text" id="newListInputName" required placeholder="למשל: סופר פארם, שבת..." class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-3 text-sm focus:outline-none focus:border-skyBrand-500 transition">
+                    </div>
+
+                    <button type="submit" class="w-full bg-skyBrand-500 hover:bg-skyBrand-600 text-white font-bold py-2.5 rounded-xl transition text-sm shadow">
+                        <span id="listModalSubmitText">צור רשימה</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Confirm Delete List Modal -->
+        <div id="confirmDeleteModal" class="fixed inset-0 z-50 modal-backdrop hidden flex items-center justify-center p-4">
+            <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl relative animate-fade-in text-center">
+                <div class="w-12 h-12 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center mx-auto mb-3 text-xl font-bold">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <h3 class="font-bold text-slate-800 text-lg mb-1">מחיקת רשימה</h3>
+                <p id="confirmDeleteText" class="text-xs text-slate-500 mb-5">האם אתה בטוח שברצונך למחוק את הרשימה הנוכחית? פעולה זו בלתי הפיכה ותמחק את כל המוצרים שבה.</p>
+                
+                <div class="flex items-center gap-3">
+                    <button onclick="closeConfirmDeleteModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 rounded-xl transition text-sm">
+                        ביטול
+                    </button>
+                    <button onclick="executeDeleteCurrentList()" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-xl transition text-sm">
+                        מחק רשימה
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Auth Modal -->
+        <div id="authModal" class="fixed inset-0 z-50 modal-backdrop hidden flex items-center justify-center p-4">
+            <div class="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl relative animate-fade-in">
+                <button onclick="closeAuthModal()" class="absolute top-4 left-4 w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+
+                <div class="text-center mb-5">
+                    <div class="w-12 h-12 bg-darkBrand text-skyBrand-400 rounded-2xl flex items-center justify-center mx-auto mb-2 text-xl font-bold">
+                        <i class="fa-solid fa-user-lock"></i>
+                    </div>
+                    <h3 class="font-bold text-slate-800 text-lg">פרופיל והתחברות</h3>
+                    <p class="text-xs text-slate-500 mt-1" id="authUserStatus">ניהול פרופיל המשתמש שלך</p>
+                </div>
+
+                <!-- Auth State Views -->
+                <div id="loggedInView" class="text-center space-y-4">
+                    <div class="p-4 bg-skyBrand-50 rounded-2xl border border-skyBrand-100">
+                        <div id="loggedInAvatar" class="w-14 h-14 rounded-full bg-skyBrand-500 text-white font-extrabold text-xl flex items-center justify-center mx-auto mb-2 shadow">?</div>
+                        <h4 id="loggedInName" class="font-bold text-slate-800 text-base"></h4>
+                        <span id="loggedInEmail" class="text-xs text-slate-500 block mt-0.5"></span>
+                    </div>
+
+                    <button onclick="handleSignOut()" class="w-full bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-bold py-2.5 rounded-xl transition text-sm flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                        <span>התנתק / החלף משתמש</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Custom Toast Notification Container -->
+        <div id="toastContainer" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 pointer-events-none w-full max-w-xs px-2"></div>
+
+    </div>
+
+    <!-- Firebase Imports & Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { 
+            getAuth, 
+            signInAnonymously, 
+            signInWithCustomToken, 
+            onAuthStateChanged,
+            GoogleAuthProvider,
+            signInWithPopup,
+            createUserWithEmailAndPassword,
+            signInWithEmailAndPassword,
+            signOut,
+            updateProfile
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { 
+            getFirestore, 
+            collection, 
+            doc, 
+            addDoc, 
+            setDoc, 
+            updateDoc, 
+            deleteDoc, 
+            onSnapshot, 
+            getDocs
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global Variables provided by system environment
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'grocery-app-default';
+
+        // Your real Firebase project configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyD8bT8YBnGPkqa5syxWgYVFhoMKAiVS7hA",
+            authDomain: "super-kal-d2049.firebaseapp.com",
+            projectId: "super-kal-d2049",
+            storageBucket: "super-kal-d2049.firebasestorage.app",
+            messagingSenderId: "759712658859",
+            appId: "1:759712658859:web:b66cd6fd0c5db341fc8eee"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // App Global State
+        let currentUser = null;
+        let activeListId = null;
+        let activeCategoryFilter = 'all';
+        let showAddedBy = true;
+        let isInCartExpanded = true;
+        let isAdmin = false;
+        let editingItemId = null;
+        let editingListId = null;
+        
+        let userLists = [];
+        let itemsMap = new Map(); // itemId -> itemData
+        let itemsUnsubscribe = null;
+        let listsUnsubscribe = null;
+
+        // Admin emails - these users see ALL lists from ALL users (via email/password login)
+        const ADMIN_EMAILS = ['idobin2012@gmail.com'];
+
+        // User Color Palette for Avatars
+        const userColors = [
+            '#a855f7', '#8b5cf6', '#ec4899', '#10b981', '#f59e0b', '#6366f1', '#14b8a6'
+        ];
+
+        // Category display order & icons (shared across rendering)
+        const categoryOrder = ['ירקות ופירות', 'לחמים', 'בשר', 'דגים', 'קפואים', 'גבינות', 'חטיפים', 'אחר'];
+        const catIcons = {
+            'ירקות ופירות': '🥦',
+            'לחמים': '🍞',
+            'בשר': '🥩',
+            'דגים': '🐟',
+            'קפואים': '🧊',
+            'גבינות': '🧀',
+            'חטיפים': '🍿',
+            'אחר': '📦'
+        };
+
+        // Auto-categorization: keyword lists per category, checked in this priority order
+        // (frozen/meat/fish/dairy/bread/snacks first since they're more specific, produce last as broadest catch-all)
+        const categoryKeywordRules = [
+            ['קפואים', ['קפוא', 'גלידה', 'קרח', 'ארטיק']],
+            ['בשר', ['עוף', 'בקר', 'בשר', 'קציצ', 'נקניק', 'שניצל', 'כבד', 'הודו', 'טחון', 'המבורגר', 'אנטריקוט', 'פילה בקר', 'כרעי', 'חזה עוף', 'סטייק', 'צלי', 'קבב']],
+            ['דגים', ['דג', 'סלמון', 'טונה', 'פורל', 'בקלה', 'דניס', 'לברק', 'הרינג', 'טילפיה', 'קוד']],
+            ['גבינות', ['חלב', 'גבינה', 'גבינת', 'יוגורט', 'קוטג', 'שמנת', 'חמאה', 'לבן', 'לאבנה', 'קשקבל', 'מוצרלה', 'פרמזן', 'ריקוטה', 'ביצים', 'ביצה']],
+            ['לחמים', ['לחם', 'פיתה', 'חלה', 'בגט', 'לחמניה', 'לחמניות', 'טוסט', 'קרקר', 'מצה', 'קרואסון', 'בייגל']],
+            ['חטיפים', ['חטיף', 'חטיפי', 'במבה', 'ביסלי', 'שוקולד', 'עוגי', 'וופל', "צ'יפס", 'פופקורן', 'אגוז', 'אגוזים', 'גרעינים', 'סוכריות', 'עוגה', 'עוגיות', 'מסטיק']],
+            ['ירקות ופירות', ['עגבני', 'מלפפון', 'בצל', 'תפוח', 'בננה', 'גזר', 'פלפל', 'תפוד', 'תפוח אדמה', 'חסה', 'כרוב', 'קישוא', 'שום', 'לימון', 'אבוקדו', 'ענבים', 'תות', 'אבטיח', 'מלון', 'אפרסק', 'שזיף', 'תפוז', 'קלמנטינה', 'אננס', 'מנגו', 'פטריי', 'ברוקולי', 'כרובית', 'סלרי', 'תרד', 'פטרוזיליה', 'כוסברה', 'נענע', 'שעועית', 'אפונה', 'בטטה', 'סלק', 'צנונית', 'זוקיני', 'דלעת']],
+        ];
+
+        // Words/product names the app has "learned" from users manually correcting the category
+        // (shared across everyone, in real time, via Firestore)
+        let learnedCategories = new Map(); // normalized name -> category
+        let learningUnsubscribe = null;
+
+        function subscribeToLearnedCategories() {
+            if (learningUnsubscribe) return; // already subscribed
+            learningUnsubscribe = onSnapshot(getCategoryLearningCollectionRef(), (snapshot) => {
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    if (data && data.name && data.category) {
+                        learnedCategories.set(data.name, data.category);
+                    }
+                });
+            }, (err) => {
+                console.warn("Category learning subscription failed:", err);
+            });
+        }
+
+        // Curated product → category list (321 products), sorted longest-name-first
+        // so more specific names (e.g. "חמאת בוטנים") are matched before shorter,
+        // unrelated ones (e.g. "חמאה"). Highest priority in category detection.
+        const curatedProducts = [["גבינה צהובה מופחתת שומן", "גבינות"], ["פילה טונה בעשבי תיבול", "דגים"], ["טבלת שוקולד עם אגוזים", "חטיפים"], ["שימורי שעועית ברוטב", "אחר"], ["פסטרמה הודו מעושנת", "בשר"], ["טונה אדומה טרייה", "דגים"], ["פולי סויה קלופים", "קפואים"], ["פירות יער קפואים", "קפואים"], ["טבעות בצל קפואות", "קפואים"], ["פופקורן למיקרוגל", "חטיפים"], ["לחמניות המבורגר", "לחמים"], ["בשר לבקר לקדירה", "בשר"], ["סרדינים משומרים", "דגים"], ["רוטב צ'ילי מתוק", "אחר"], ["רוטב צ'ילי חריף", "אחר"], ["לחמניות ארוכות", "לחמים"], ["לחם כוסמין לבן", "לחמים"], ["לחמניות שומשום", "לחמים"], ["פריכיות כוסמין", "לחמים"], ["סטייק אנטריקוט", "בשר"], ["וופל בלגי קפוא", "קפואים"], ["גבינת נפוליאון", "גבינות"], ["גרעינים שחורים", "חטיפים"], ["סוכריות על מקל", "חטיפים"], ["רוטב אלף האיים", "אחר"], ["פלפל שחור גרוס", "אחר"], ["בייגל אמריקאי", "לחמים"], ["לחם ללא גלוטן", "לחמים"], ["בשר הודו טחון", "בשר"], ["מעורב ירושלמי", "בשר"], ["נקניקיות מרגז", "בשר"], ["קציצות קפואות", "קפואים"], ["סיגרים קפואים", "קפואים"], ["בצק פריך קפוא", "קפואים"], ["בצק פיצה מוכן", "קפואים"], ["פטריות קפואות", "קפואים"], ["גבינה בולגרית", "גבינות"], ["חלב ללא לקטוז", "גבינות"], ["גרעינים לבנים", "חטיפים"], ["שימורי פטריות", "אחר"], ["פיתות כוסמין", "לחמים"], ["פיתות רגילות", "לחמים"], ["פריכיות אורז", "לחמים"], ["בשר בקר טחון", "בשר"], ["שווארמה הודו", "בשר"], ["נסיכת הנילוס", "דגים"], ["ברוקולי קפוא", "קפואים"], ["שעועית קפואה", "קפואים"], ["אדממה בתרמיל", "קפואים"], ["משקאות חלבון", "גבינות"], ["יוגורט יווני", "גבינות"], ["גבינה מעושנת", "גבינות"], ["חטיפי אנרגיה", "חטיפים"], ["סוכריות גומי", "חטיפים"], ["שימורי זיתים", "אחר"], ["פפריקה מתוקה", "אחר"], ["טבליות למדיח", "אחר"], ["עגבניות שרי", "ירקות ופירות"], ["לחמניות קשר", "לחמים"], ["לחמניות ביס", "לחמים"], ["לחמניות חלב", "לחמים"], ["סטייק סינטה", "בשר"], ["גרונות הודו", "בשר"], ["קרפצ'יו בקר", "בשר"], ["טונה בקופסה", "דגים"], ["סלמון מעושן", "דגים"], ["אפונה מתוקה", "קפואים"], ["רביולי קפוא", "קפואים"], ["גבינה צהובה", "גבינות"], ["מעדן שוקולד", "גבינות"], ["יוגורט רגיל", "גבינות"], ["גבינת זיתים", "גבינות"], ["שמנת לבישול", "גבינות"], ["גבינה צפתית", "גבינות"], ["גבינת עיזים", "גבינות"], ["גבינה כחולה", "גבינות"], ["גבינת חלומי", "גבינות"], ["שמנת של פעם", "גבינות"], ["שוקולד מריר", "חטיפים"], ["רסק עגבניות", "אחר"], ["שימורי תירס", "אחר"], ["חומץ תפוחים", "אחר"], ["רוטב טריאקי", "אחר"], ["סודה לשתייה", "אחר"], ["ממרח שוקולד", "אחר"], ["חמאת בוטנים", "אחר"], ["שימורי אננס", "אחר"], ["לחם כוסמין", "לחמים"], ["עוגת שמרים", "לחמים"], ["קציצות בקר", "בשר"], ["סטייק פילה", "בשר"], ["שוקיים עוף", "בשר"], ["סלמון פילה", "דגים"], ["סלמון קפוא", "דגים"], ["צ'יפס קפוא", "קפואים"], ["פיצה קפואה", "קפואים"], ["שניצל קפוא", "קפואים"], ["קובה קפואה", "קפואים"], ["ניוקי קפוא", "קפואים"], ["גבינה לבנה", "גבינות"], ["שמנת חמוצה", "גבינות"], ["שמנת מתוקה", "גבינות"], ["גבינת שמנת", "גבינות"], ["גבינת כנען", "גבינות"], ["שוקולד חלב", "חטיפים"], ["שוקולד לבן", "חטיפים"], ["חטיף חלבון", "חטיפים"], ["חטיף דגנים", "חטיפים"], ["נייר טואלט", "אחר"], ["שקיות אשפה", "אחר"], ["שמן חמניות", "אחר"], ["פירורי לחם", "אחר"], ["אבקת אפייה", "אחר"], ["תמצית וניל", "אחר"], ["מרכך כביסה", "אחר"], ["ספוג לכלים", "אחר"], ["חסה ערבית", "ירקות ופירות"], ["פטרוזיליה", "ירקות ופירות"], ["כרוב אדום", "ירקות ופירות"], ["לחם מחמצת", "לחמים"], ["לחם שיפון", "לחמים"], ["לחם דגנים", "לחמים"], ["פיתות ביס", "לחמים"], ["צלעות בקר", "בשר"], ["שניצל עוף", "בשר"], ["לבבות עוף", "בשר"], ["נתח קצבים", "בשר"], ["ממרח טונה", "דגים"], ["לקט ירקות", "קפואים"], ["תירס קפוא", "קפואים"], ["בצק פילאס", "קפואים"], ["אצבעות דג", "קפואים"], ["פסטל קפוא", "קפואים"], ["מנגו קפוא", "קפואים"], ["גבינת פטה", "גבינות"], ["מעדן וניל", "גבינות"], ["חלב עיזים", "גבינות"], ["חטיף אצות", "אחר"], ["שמן קנולה", "אחר"], ["רוטב סויה", "אחר"], ["נייר סופג", "אחר"], ["נוזל כלים", "אחר"], ["חומץ רגיל", "אחר"], ["מיקס חסה", "ירקות ופירות"], ["בצל ירוק", "ירקות ופירות"], ["בצל צהוב", "ירקות ופירות"], ["כרוב לבן", "ירקות ופירות"], ["אוכמניות", "ירקות ופירות"], ["בזיליקום", "ירקות ופירות"], ["בצל סגול", "ירקות ופירות"], ["פסיפלורה", "ירקות ופירות"], ["דובדבנים", "ירקות ופירות"], ["לחם פרוס", "לחמים"], ["לחם כפרי", "לחמים"], ["קרוטונים", "לחמים"], ["כרעי עוף", "בשר"], ["נקניקיות", "בשר"], ["בצק עלים", "קפואים"], ["תות קפוא", "קפואים"], ["לאבנה 5%", "גבינות"], ["מסקרפונה", "גבינות"], ["חלב צמחי", "גבינות"], ["תפוצ'יפס", "חטיפים"], ["פיסטוקים", "חטיפים"], ["דפי אורז", "אחר"], ["סבון גוף", "אחר"], ["אבקת מרק", "אחר"], ["קורנפלור", "אחר"], ["עגבניות", "ירקות ופירות"], ["אפרסקים", "ירקות ופירות"], ["קולורבי", "ירקות ופירות"], ["קישואים", "ירקות ופירות"], ["תות שדה", "ירקות ופירות"], ["אפרסמון", "ירקות ופירות"], ["ברוקולי", "ירקות ופירות"], ["ערמונים", "ירקות ופירות"], ["רוזמרין", "ירקות ופירות"], ["ארטישוק", "ירקות ופירות"], ["אשכולית", "ירקות ופירות"], ["טורטיות", "לחמים"], ["קרואסון", "לחמים"], ["פוקאצ'ה", "לחמים"], ["חזה עוף", "בשר"], ["עוף שלם", "בשר"], ["צלי כתף", "בשר"], ["המבורגר", "בשר"], ["כבד עוף", "בשר"], ["כתף עגל", "בשר"], ["שפונדרה", "בשר"], ["סרדינים", "דגים"], ["ברמונדי", "דגים"], ["אינטיאס", "דגים"], ["מוסר ים", "דגים"], ["ברבוניה", "דגים"], ["ארטיקים", "קפואים"], ["שלגונים", "קפואים"], ["דוריתוס", "חטיפים"], ["פופקורן", "חטיפים"], ["סוכריות", "חטיפים"], ["מסטיקים", "חטיפים"], ["פרינגלס", "חטיפים"], ["פרלינים", "חטיפים"], ["שמן זית", "אחר"], ["כרובית", "ירקות ופירות"], ["אבוקדו", "ירקות ופירות"], ["פטריות", "ירקות ופירות"], ["מלפפון", "ירקות ופירות"], ["תפוחים", "ירקות ופירות"], ["תפוזים", "ירקות ופירות"], ["כוסברה", "ירקות ופירות"], ["צנונית", "ירקות ופירות"], ["שזיפים", "ירקות ופירות"], ["לחם קל", "לחמים"], ["פרגיות", "בשר"], ["כנפיים", "בשר"], ["פסטרמה", "בשר"], ["קרפיון", "דגים"], ["אנשובי", "דגים"], ["דג סול", "דגים"], ["ג'חנון", "קפואים"], ["אקטימל", "גבינות"], ["פאטינה", "גבינות"], ["מוצרלה", "גבינות"], ["ריקוטה", "גבינות"], ["בייגלה", "חטיפים"], ["אפרופו", "חטיפים"], ["אגוזים", "חטיפים"], ["בוטנים", "חטיפים"], ["צ'יטוס", "חטיפים"], ["מרשמלו", "חטיפים"], ["עוגיות", "אחר"], ["פתי בר", "אחר"], ["קרקרים", "אחר"], ["פתיתים", "אחר"], ["קוסקוס", "אחר"], ["חמוצים", "אחר"], ["מלח גס", "אחר"], ["כורכום", "אחר"], ["אבטיח", "ירקות ופירות"], ["קיווי", "ירקות ופירות"], ["ענבים", "ירקות ופירות"], ["בננות", "ירקות ופירות"], ["לימון", "ירקות ופירות"], ["אגסים", "ירקות ופירות"], ["פפאיה", "ירקות ופירות"], ["רימון", "ירקות ופירות"], ["טימין", "ירקות ופירות"], ["רוגלך", "לחמים"], ["בורקס", "לחמים"], ["ג'בטה", "לחמים"], ["מאפין", "לחמים"], ["אסאדו", "בשר"], ["אמנון", "דגים"], ["הרינג", "דגים"], ["לוקוס", "דגים"], ["איקרה", "דגים"], ["אפונה", "קפואים"], ["מלווח", "קפואים"], ["גלידה", "קפואים"], ["קוטג'", "גבינות"], ["חומוס", "גבינות"], ["פרמזן", "גבינות"], ["גאודה", "גבינות"], ["טחינה", "גבינות"], ["קממבר", "גבינות"], ["עבאדי", "חטיפים"], ["ביסלי", "חטיפים"], ["תפוגן", "חטיפים"], ["ופלים", "חטיפים"], ["שקדים", "חטיפים"], ["כיפלי", "חטיפים"], ["נודלס", "אחר"], ["קטשופ", "אחר"], ["מיונז", "אחר"], ["סילאן", "אחר"], ["בטטה", "ירקות ופירות"], ["גמבה", "ירקות ופירות"], ["דלעת", "ירקות ופירות"], ["נענע", "ירקות ופירות"], ["סלרי", "ירקות ופירות"], ["מלון", "ירקות ופירות"], ["מנגו", "ירקות ופירות"], ["חציל", "ירקות ופירות"], ["אננס", "ירקות ופירות"], ["שמיר", "ירקות ופירות"], ["באגט", "לחמים"], ["מצות", "לחמים"], ["פתית", "לחמים"], ["דניש", "לחמים"], ["סלמי", "בשר"], ["דניס", "דגים"], ["לברק", "דגים"], ["בקלה", "דגים"], ["מקרל", "דגים"], ["פורל", "דגים"], ["חמאה", "גבינות"], ["קפיר", "גבינות"], ["במבה", "חטיפים"], ["קשיו", "חטיפים"], ["אורז", "אחר"], ["פסטה", "אחר"], ["סוכר", "אחר"], ["פלפל", "אחר"], ["חרדל", "אחר"], ["שמפו", "אחר"], ["פסטו", "אחר"], ["כמון", "אחר"], ["ריבה", "אחר"], ["גזר", "ירקות ופירות"], ["שום", "ירקות ופירות"], ["פטל", "ירקות ופירות"], ["חלה", "לחמים"], ["קבב", "בשר"], ["קוד", "דגים"], ["חלב", "גבינות"], ["ברי", "גבינות"], ["קמח", "אחר"], ["מלח", "אחר"], ["קפה", "אחר"], ["דבש", "אחר"], ["תה", "אחר"]];
+
+        // Guess a category from a free-text product name; returns null if nothing matched.
+        // Priority: curated product list → learned (user-corrected) names → generic keyword rules.
+        function guessCategoryFromName(name) {
+            const normalized = (name || '').trim();
+            if (!normalized) return null;
+
+            for (const [productName, category] of curatedProducts) {
+                if (normalized.includes(productName)) {
+                    return category;
+                }
+            }
+
+            for (const [learnedName, category] of learnedCategories.entries()) {
+                if (normalized.includes(learnedName)) {
+                    return category;
+                }
+            }
+
+            for (const [category, keywords] of categoryKeywordRules) {
+                if (keywords.some(kw => normalized.includes(kw))) {
+                    return category;
+                }
+            }
+            return null;
+        }
+
+        // Remember a manual category correction so the whole family benefits from it next time
+        async function learnCategoryIfNeeded(name, category) {
+            const normalized = (name || '').trim();
+            if (!normalized || normalized.length < 2 || !category) return;
+
+            // Only save if this wasn't already correctly guessed (avoids redundant writes)
+            const currentGuess = guessCategoryFromName(normalized);
+            if (currentGuess === category) return;
+
+            try {
+                const docId = encodeURIComponent(normalized).slice(0, 300);
+                await setDoc(doc(getCategoryLearningCollectionRef(), docId), {
+                    name: normalized,
+                    category: category,
+                    updatedAt: Date.now()
+                });
+                learnedCategories.set(normalized, category);
+            } catch (err) {
+                console.warn("Failed to save category learning:", err);
+            }
+        }
+
+        // Whether the category has been picked manually by the user in the current modal session
+        let categoryAutoLocked = false;
+
+        window.handleItemNameInput = function(value) {
+            if (categoryAutoLocked) return;
+            const guessed = guessCategoryFromName(value);
+            if (guessed) {
+                document.getElementById('itemCategory').value = guessed;
+            }
+        };
+
+        window.markCategoryManual = function() {
+            categoryAutoLocked = true;
+        };
+
+        function getUserColor(str) {
+            let hash = 0;
+            for (let i = 0; i < (str || '').length; i++) {
+                hash = str.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            return userColors[Math.abs(hash) % userColors.length];
+        }
+
+        // Collection references helper
+        function getListsCollectionRef() {
+            return collection(db, 'artifacts', appId, 'grocery_lists');
+        }
+
+        function getItemsCollectionRef() {
+            return collection(db, 'artifacts', appId, 'grocery_items');
+        }
+
+        function getCategoryLearningCollectionRef() {
+            return collection(db, 'artifacts', appId, 'category_learning');
+        }
+
+        // Returns true if the current user may edit the active list
+        // (always true for non-admins on their own/shared lists; admins get view-only on lists that aren't theirs)
+        function canEditActiveList() {
+            if (!isAdmin) return true;
+            const list = userLists.find(l => l.id === activeListId);
+            if (!list) return true;
+            const members = list.members || [];
+            return list.createdBy === currentUser.uid || members.includes(currentUser.uid);
+        }
+
+        // Initialize Auth
+        window.addEventListener('DOMContentLoaded', async () => {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                try {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } catch (e) {
+                    console.warn("Custom token auth failed, using anonymous:", e);
+                    await signInAnonymously(auth);
+                }
+            } else if (!auth.currentUser) {
+                try {
+                    await signInAnonymously(auth);
+                } catch (e) {
+                    console.error("Anonymous auth failed:", e);
+                }
+            }
+
+            // Auth state observer
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    const savedCustomName = localStorage.getItem('superkal_user_name');
+                    const displayName = user.displayName || savedCustomName || (user.isAnonymous ? '' : user.email?.split('@')[0]);
+
+                    currentUser = {
+                        uid: user.uid,
+                        displayName: displayName,
+                        email: user.email || '',
+                        color: getUserColor(user.uid)
+                    };
+                    isAdmin = ADMIN_EMAILS.includes((currentUser.email || '').toLowerCase());
+
+                    updateAuthUI();
+                    subscribeToLearnedCategories();
+
+                    if (displayName || !user.isAnonymous) {
+                        showMainAppView();
+                        subscribeToUserLists();
+                        handlePendingJoinIfAny();
+                    } else {
+                        showWelcomeScreenView();
+                    }
+                } else {
+                    showWelcomeScreenView();
+                }
+            });
+        });
+
+        // View Switches
+        window.showWelcomeScreenView = function() {
+            document.getElementById('welcomeScreen').classList.remove('hidden');
+            document.getElementById('mainAppContent').classList.add('hidden');
+        };
+
+        window.showMainAppView = function() {
+            document.getElementById('welcomeScreen').classList.add('hidden');
+            document.getElementById('mainAppContent').classList.remove('hidden');
+        };
+
+        window.switchAuthTab = function(tab) {
+            const quickBtn = document.getElementById('tabQuickBtn');
+            const emailBtn = document.getElementById('tabEmailBtn');
+            const quickForm = document.getElementById('quickAuthForm');
+            const emailForm = document.getElementById('emailAuthForm');
+
+            if (tab === 'quick') {
+                quickBtn.className = 'flex-1 py-2 text-xs font-bold rounded-lg transition bg-skyBrand-500 text-white shadow';
+                emailBtn.className = 'flex-1 py-2 text-xs font-bold rounded-lg transition text-slate-400 hover:text-white';
+                quickForm.classList.remove('hidden');
+                emailForm.classList.add('hidden');
+            } else {
+                emailBtn.className = 'flex-1 py-2 text-xs font-bold rounded-lg transition bg-skyBrand-500 text-white shadow';
+                quickBtn.className = 'flex-1 py-2 text-xs font-bold rounded-lg transition text-slate-400 hover:text-white';
+                emailForm.classList.remove('hidden');
+                quickForm.classList.add('hidden');
+            }
+        };
+
+        window.handleQuickAuth = async function(e) {
+            e.preventDefault();
+            const name = document.getElementById('quickNameInput').value.trim();
+            if (!name) return;
+
+            try {
+                if (auth.currentUser) {
+                    await updateProfile(auth.currentUser, { displayName: name });
+                }
+                localStorage.setItem('superkal_user_name', name);
+                
+                currentUser = {
+                    uid: auth.currentUser ? auth.currentUser.uid : 'user_' + Math.random().toString(36).substr(2, 9),
+                    displayName: name,
+                    email: auth.currentUser?.email || '',
+                    color: getUserColor(auth.currentUser?.uid || name)
+                };
+                isAdmin = ADMIN_EMAILS.includes((currentUser.email || '').toLowerCase());
+
+                updateAuthUI();
+                showMainAppView();
+                subscribeToUserLists();
+                handlePendingJoinIfAny();
+                showToast(`ברוך הבא ${name}!`, "success");
+            } catch (err) {
+                console.error("Error setting quick auth name:", err);
+                showToast("שגיאה ברישום השם", "error");
+            }
+        };
+
+        // Authentication Functions
+        window.handleGoogleAuth = async function() {
+            const noticeEl = document.getElementById('googleAuthNotice');
+            if (noticeEl) noticeEl.classList.add('hidden');
+
+            try {
+                const provider = new GoogleAuthProvider();
+                await signInWithPopup(auth, provider);
+                closeAuthModal();
+                showToast("התחברת בהצלחה עם גוגל!", "success");
+            } catch (e) {
+                console.warn("Google auth popup failed or blocked in iframe:", e);
+                if (noticeEl) {
+                    noticeEl.classList.remove('hidden');
+                }
+                showToast("התחברות גוגל אינה נתמכת בסביבת התצוגה. השתמש בכניסה מהירה", "error");
+            }
+        };
+
+        window.handleEmailAuth = async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('authEmailWelcome').value.trim();
+            const password = document.getElementById('authPasswordWelcome').value.trim();
+            const name = document.getElementById('authDisplayNameWelcome').value.trim();
+
+            if (!email || !password || !name) return;
+
+            try {
+                try {
+                    const res = await createUserWithEmailAndPassword(auth, email, password);
+                    await updateProfile(res.user, { displayName: name });
+                } catch (signUpErr) {
+                    if (signUpErr.code === 'auth/email-already-in-use') {
+                        const res = await signInWithEmailAndPassword(auth, email, password);
+                        if (name) await updateProfile(res.user, { displayName: name });
+                    } else {
+                        throw signUpErr;
+                    }
+                }
+                localStorage.setItem('superkal_user_name', name);
+                closeAuthModal();
+                showToast("התחברת בהצלחה!", "success");
+            } catch (err) {
+                console.error("Email auth error:", err);
+                showToast("שגיאה בתהליך ההתחברות בדוא״ל", "error");
+            }
+        };
+
+        window.handleSignOut = async function() {
+            try {
+                localStorage.removeItem('superkal_user_name');
+                await signOut(auth);
+                await signInAnonymously(auth);
+                closeAuthModal();
+                showWelcomeScreenView();
+                showToast("התנתקת מהחשבון", "info");
+            } catch (err) {
+                console.error("Sign out error:", err);
+            }
+        };
+
+        function updateAuthUI() {
+            if (!currentUser || !currentUser.displayName) return;
+            const initials = currentUser.displayName.charAt(0).toUpperCase();
+            document.getElementById('headerUserInitials').innerText = initials;
+
+            document.getElementById('loggedInAvatar').innerText = initials;
+            document.getElementById('loggedInAvatar').style.backgroundColor = currentUser.color;
+            document.getElementById('loggedInName').innerText = currentUser.displayName + (isAdmin ? ' 👑' : '');
+            document.getElementById('loggedInEmail').innerText = currentUser.email || 'משתמש מהיר';
+
+            const subtitleEl = document.getElementById('headerSubtitle');
+            if (subtitleEl) {
+                subtitleEl.innerText = isAdmin ? 'מצב מנהל · כל הרשימות' : 'רשימת קניות משותפת';
+            }
+        }
+
+        // User Lists Listener
+        function subscribeToUserLists() {
+            if (!currentUser) return;
+
+            if (listsUnsubscribe) listsUnsubscribe();
+
+            const listsRef = getListsCollectionRef();
+            listsUnsubscribe = onSnapshot(listsRef, (snapshot) => {
+                userLists = [];
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    const members = data.members || [];
+                    const hasAccess = isAdmin || members.includes(currentUser.uid) || data.createdBy === currentUser.uid;
+                    if (hasAccess) {
+                        userLists.push({ id: docSnap.id, ...data });
+                    }
+                });
+
+                if (userLists.length === 0) {
+                    createNewDefaultList();
+                } else {
+                    renderListsDropdown();
+                    if (!activeListId || !userLists.some(l => l.id === activeListId)) {
+                        activeListId = userLists[0].id;
+                    }
+                    document.getElementById('listSelect').value = activeListId;
+                    document.getElementById('currentListCode').innerText = activeListId;
+                    subscribeToActiveItems();
+                }
+            }, (err) => {
+                console.error("Lists subscription error:", err);
+            });
+        }
+
+        async function createNewDefaultList() {
+            try {
+                const newRef = doc(getListsCollectionRef());
+                const newList = {
+                    name: 'הרשימה שלי',
+                    createdBy: currentUser.uid,
+                    createdByName: currentUser.displayName || '',
+                    members: [currentUser.uid],
+                    createdAt: Date.now()
+                };
+                await setDoc(newRef, newList);
+                activeListId = newRef.id;
+            } catch (e) {
+                console.error("Error creating default list:", e);
+            }
+        }
+
+        function renderListsDropdown() {
+            const select = document.getElementById('listSelect');
+            select.innerHTML = userLists.map(l => {
+                const isOwn = l.createdBy === currentUser.uid;
+                const ownerLabel = (isAdmin && !isOwn && l.createdByName) ? ` (${l.createdByName})` : '';
+                return `<option value="${l.id}">${escapeHtml(l.name)}${escapeHtml(ownerLabel)}</option>`;
+            }).join('');
+        }
+
+        window.switchList = function(listId) {
+            activeListId = listId;
+            document.getElementById('currentListCode').innerText = listId;
+            subscribeToActiveItems();
+        };
+
+        window.openCreateListModal = function() {
+            editingListId = null;
+            document.getElementById('newListInputName').value = '';
+            document.getElementById('listModalTitle').innerText = 'יצירת רשימה חדשה';
+            document.getElementById('listModalSubtitle').innerText = 'הזן שם עבור רשימת הקניות החדשה שלך';
+            document.getElementById('listModalIcon').className = 'fa-solid fa-list-check';
+            document.getElementById('listModalSubmitText').innerText = 'צור רשימה';
+            document.getElementById('createListModal').classList.remove('hidden');
+        };
+
+        window.openEditListModal = function() {
+            if (!activeListId) {
+                showToast("אין רשימה פעילה לעריכה", "error");
+                return;
+            }
+            if (!canEditActiveList()) {
+                showToast("צפייה בלבד - אינך יכול לערוך רשימה של משתמש אחר", "error");
+                return;
+            }
+            const list = userLists.find(l => l.id === activeListId);
+            editingListId = activeListId;
+            document.getElementById('newListInputName').value = list ? (list.name || '') : '';
+            document.getElementById('listModalTitle').innerText = 'עריכת שם רשימה';
+            document.getElementById('listModalSubtitle').innerText = 'שנה את שם הרשימה הנוכחית';
+            document.getElementById('listModalIcon').className = 'fa-solid fa-pen';
+            document.getElementById('listModalSubmitText').innerText = 'שמור שינויים';
+            document.getElementById('createListModal').classList.remove('hidden');
+        };
+
+        window.closeCreateListModal = function() {
+            editingListId = null;
+            document.getElementById('createListModal').classList.add('hidden');
+        };
+
+        window.handleCreateList = async function(e) {
+            e.preventDefault();
+            const name = document.getElementById('newListInputName').value.trim();
+            if (!name) return;
+
+            try {
+                if (editingListId) {
+                    // Rename existing list
+                    await updateDoc(doc(getListsCollectionRef(), editingListId), { name: name });
+                    closeCreateListModal();
+                    showToast("שם הרשימה עודכן בהצלחה", "success");
+                } else {
+                    // Create new list
+                    const newRef = doc(getListsCollectionRef());
+                    const newList = {
+                        name: name,
+                        createdBy: currentUser.uid,
+                        createdByName: currentUser.displayName || '',
+                        members: [currentUser.uid],
+                        createdAt: Date.now()
+                    };
+                    await setDoc(newRef, newList);
+                    activeListId = newRef.id;
+                    closeCreateListModal();
+                    showToast("רשימה חדשה נוצרה בהצלחה", "success");
+                }
+            } catch (err) {
+                console.error("Error saving list:", err);
+                showToast(editingListId ? "נכשל בעדכון שם הרשימה" : "נכשל ביצירת רשימה", "error");
+            }
+        };
+
+        // Subscribe to items for active list
+        function subscribeToActiveItems() {
+            if (!activeListId) return;
+
+            document.getElementById('syncLoader').classList.remove('hidden');
+
+            if (itemsUnsubscribe) itemsUnsubscribe();
+
+            const itemsRef = getItemsCollectionRef();
+            itemsUnsubscribe = onSnapshot(itemsRef, (snapshot) => {
+                itemsMap.clear();
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data();
+                    if (data.listId === activeListId) {
+                        itemsMap.set(docSnap.id, { id: docSnap.id, ...data });
+                    }
+                });
+
+                document.getElementById('syncLoader').classList.add('hidden');
+                document.getElementById('pendingSection').classList.remove('hidden');
+                document.getElementById('inCartSection').classList.remove('hidden');
+
+                renderItems();
+            }, (error) => {
+                console.error("Error fetching items:", error);
+                document.getElementById('syncLoader').classList.add('hidden');
+                showToast("שגיאה בסנכרון המוצרים", "error");
+            });
+        }
+
+        // Render Active & In-Cart Items
+        function renderItems() {
+            const pendingContainer = document.getElementById('pendingList');
+            const inCartContainer = document.getElementById('inCartList');
+            const emptyState = document.getElementById('emptyState');
+
+            pendingContainer.innerHTML = '';
+            inCartContainer.innerHTML = '';
+
+            const editable = canEditActiveList();
+            const banner = document.getElementById('viewOnlyBanner');
+            const fab = document.getElementById('fabBtn');
+            if (banner) banner.classList.toggle('hidden', editable);
+            if (fab) {
+                fab.classList.toggle('opacity-40', !editable);
+                fab.classList.toggle('grayscale', !editable);
+            }
+
+            const items = Array.from(itemsMap.values());
+
+            const filteredItems = items.filter(item => {
+                if (activeCategoryFilter === 'all') return true;
+                return item.category === activeCategoryFilter;
+            });
+
+            const pending = filteredItems.filter(i => i.status !== 'in_cart');
+            const inCart = filteredItems.filter(i => i.status === 'in_cart');
+
+            document.getElementById('pendingBadge').innerText = pending.length;
+            document.getElementById('inCartBadge').innerText = inCart.length;
+
+            if (pending.length === 0) {
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+                appendGroupedItems(pendingContainer, pending, false);
+            }
+
+            if (inCart.length === 0) {
+                document.getElementById('inCartSection').classList.add('hidden');
+            } else {
+                document.getElementById('inCartSection').classList.remove('hidden');
+                appendGroupedItems(inCartContainer, inCart, true);
+            }
+        }
+
+        // Group items by category, adding a header above each group
+        function appendGroupedItems(container, itemsList, isInCart) {
+            const groups = {};
+            itemsList.forEach(item => {
+                const cat = item.category || 'אחר';
+                if (!groups[cat]) groups[cat] = [];
+                groups[cat].push(item);
+            });
+
+            const orderedCats = categoryOrder.filter(c => groups[c]);
+            Object.keys(groups).forEach(c => {
+                if (!orderedCats.includes(c)) orderedCats.push(c);
+            });
+
+            orderedCats.forEach(cat => {
+                container.appendChild(createCategoryHeader(cat));
+                groups[cat].forEach(item => {
+                    container.appendChild(createItemCard(item, isInCart));
+                });
+            });
+        }
+
+        // Category Header Element
+        function createCategoryHeader(category) {
+            const header = document.createElement('div');
+            header.className = 'flex items-center gap-2 pt-3 pb-1 px-0.5 first:pt-0';
+            header.innerHTML = `
+                <span class="text-sm leading-none">${catIcons[category] || '📦'}</span>
+                <h3 class="text-[11px] font-extrabold text-slate-500 uppercase tracking-wider whitespace-nowrap">${escapeHtml(category)}</h3>
+                <div class="flex-1 h-px bg-slate-200"></div>
+            `;
+            return header;
+        }
+
+        // Create Item Card HTML Element
+        function createItemCard(item, isInCart) {
+            const card = document.createElement('div');
+            card.className = `p-3.5 rounded-2xl bg-white border transition-all duration-200 flex items-start justify-between gap-3 shadow-sm hover:shadow-md ${
+                isInCart ? 'opacity-60 bg-slate-50 border-slate-200' : 'border-slate-100 hover:border-skyBrand-200'
+            }`;
+
+            const catEmoji = catIcons[item.category] || '📦';
+            const userInitial = (item.addedBy?.name || 'U').substring(0, 1).toUpperCase();
+            const userBg = item.addedBy?.color || '#0ea5e9';
+            const canEdit = canEditActiveList();
+
+            card.innerHTML = `
+                <div class="flex items-start gap-3 flex-1 min-w-0">
+                    <button ${canEdit ? `onclick="toggleItemStatus('${item.id}', ${!isInCart})"` : 'disabled'} class="mt-0.5 checkbox-bounce w-6 h-6 rounded-lg border-2 ${
+                        isInCart ? 'bg-skyBrand-500 border-skyBrand-500 text-white' : 'border-slate-300 hover:border-skyBrand-500 bg-white'
+                    } flex items-center justify-center transition flex-shrink-0 ${!canEdit ? 'opacity-50 cursor-not-allowed' : ''}">
+                        <i class="fa-solid fa-check text-xs ${isInCart ? 'opacity-100' : 'opacity-0'}"></i>
+                    </button>
+
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="font-bold text-slate-800 text-sm leading-tight ${isInCart ? 'line-through text-slate-500' : ''}">${escapeHtml(item.name)}</span>
+                            ${item.quantity ? `<span class="bg-skyBrand-50 text-skyBrand-700 font-extrabold text-[11px] px-2 py-0.5 rounded-md border border-skyBrand-100">${escapeHtml(item.quantity)}</span>` : ''}
+                        </div>
+
+                        <div class="flex items-center gap-2 mt-1 text-xs text-slate-500 flex-wrap">
+                            <span class="inline-flex items-center gap-1 text-[11px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md font-medium">
+                                <span>${catEmoji}</span>
+                                <span>${escapeHtml(item.category)}</span>
+                            </span>
+
+                            ${item.notes ? `
+                                <span class="text-slate-500 text-[11px] italic bg-yellow-50 text-yellow-800 px-2 py-0.5 rounded-md border border-yellow-200/60 truncate max-w-[180px]" title="${escapeHtml(item.notes)}">
+                                    <i class="fa-regular fa-comment-dots ml-1"></i>${escapeHtml(item.notes)}
+                                </span>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-1.5 flex-shrink-0">
+                    ${showAddedBy ? `
+                        <div class="w-6 h-6 rounded-full text-white font-extrabold text-[10px] flex items-center justify-center shadow-xs" style="background-color: ${userBg}" title="התווסף על ידי ${escapeHtml(item.addedBy?.name || 'חבר')}">
+                            ${userInitial}
+                        </div>
+                    ` : ''}
+
+                    ${canEdit ? `
+                        <button onclick="openEditItemModal('${item.id}')" title="ערוך מוצר" class="w-7 h-7 rounded-lg text-slate-400 hover:text-skyBrand-600 hover:bg-skyBrand-50 flex items-center justify-center transition">
+                            <i class="fa-solid fa-pen text-xs"></i>
+                        </button>
+                        <button onclick="deleteGroceryItem('${item.id}')" title="מחק מוצר" class="w-7 h-7 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 flex items-center justify-center transition">
+                            <i class="fa-regular fa-trash-can text-xs"></i>
+                        </button>
+                    ` : `
+                        <span title="צפייה בלבד" class="w-7 h-7 rounded-lg text-slate-300 flex items-center justify-center">
+                            <i class="fa-solid fa-eye text-xs"></i>
+                        </span>
+                    `}
+                </div>
+            `;
+
+            return card;
+        }
+
+        // Add Item Handler
+        window.handleAddItem = async function(e) {
+            e.preventDefault();
+            if (!activeListId) {
+                showToast("אנא בחר רשימה פעילה", "error");
+                return;
+            }
+            if (!canEditActiveList()) {
+                showToast("צפייה בלבד - אין לך הרשאת עריכה לרשימה זו", "error");
+                closeAddItemModal();
+                return;
+            }
+
+            const name = document.getElementById('itemName').value.trim();
+            const category = document.getElementById('itemCategory').value;
+            const quantity = document.getElementById('itemQuantity').value.trim();
+            const notes = document.getElementById('itemNotes').value.trim();
+
+            if (!name) return;
+
+            try {
+                // Learn from this save if the category doesn't match what auto-detection would guess
+                // (fire-and-forget, shouldn't block/fail the actual item save)
+                learnCategoryIfNeeded(name, category);
+
+                if (editingItemId) {
+                    // Update existing item
+                    const itemRef = doc(getItemsCollectionRef(), editingItemId);
+                    await updateDoc(itemRef, {
+                        name: name,
+                        category: category,
+                        quantity: quantity,
+                        notes: notes
+                    });
+                    closeAddItemModal();
+                    document.getElementById('addItemForm').reset();
+                    showToast("המוצר עודכן בהצלחה!", "success");
+                } else {
+                    // Create new item
+                    const newItem = {
+                        listId: activeListId,
+                        name: name,
+                        category: category,
+                        quantity: quantity,
+                        notes: notes,
+                        status: 'pending',
+                        addedBy: {
+                            uid: currentUser.uid,
+                            name: currentUser.displayName,
+                            color: currentUser.color
+                        },
+                        createdAt: Date.now()
+                    };
+
+                    await addDoc(getItemsCollectionRef(), newItem);
+                    closeAddItemModal();
+                    document.getElementById('addItemForm').reset();
+                    showToast("המוצר התווסף בהצלחה!", "success");
+                }
+            } catch (err) {
+                console.error("Error saving item:", err);
+                showToast(editingItemId ? "נכשל בעדכון המוצר" : "נכשל בהוספת המוצר", "error");
+            }
+        };
+
+        // Open modal in EDIT mode, pre-filled with the item's current data
+        window.openEditItemModal = function(itemId) {
+            if (!canEditActiveList()) {
+                showToast("צפייה בלבד - אין לך הרשאת עריכה לרשימה זו", "error");
+                return;
+            }
+            const item = itemsMap.get(itemId);
+            if (!item) return;
+
+            editingItemId = itemId;
+            categoryAutoLocked = true;
+
+            document.getElementById('itemName').value = item.name || '';
+            document.getElementById('itemCategory').value = item.category || 'אחר';
+            document.getElementById('itemQuantity').value = item.quantity || '';
+            document.getElementById('itemNotes').value = item.notes || '';
+
+            document.getElementById('itemModalTitle').innerText = 'עריכת מוצר';
+            document.getElementById('itemModalIcon').className = 'fa-solid fa-pen';
+            document.getElementById('itemModalSubmitIcon').className = 'fa-solid fa-check text-skyBrand-400';
+            document.getElementById('itemModalSubmitText').innerText = 'שמור שינויים';
+
+            document.getElementById('addItemModal').classList.remove('hidden');
+        };
+
+        // Toggle Item Status
+        window.toggleItemStatus = async function(itemId, toInCart) {
+            if (!canEditActiveList()) {
+                showToast("צפייה בלבד - אין לך הרשאת עריכה לרשימה זו", "error");
+                return;
+            }
+            try {
+                const itemRef = doc(getItemsCollectionRef(), itemId);
+                await updateDoc(itemRef, {
+                    status: toInCart ? 'in_cart' : 'pending'
+                });
+            } catch (err) {
+                console.error("Error toggling item status:", err);
+                showToast("שגיאה בעדכון מצב המוצר", "error");
+            }
+        };
+
+        // Delete Item
+        window.deleteGroceryItem = async function(itemId) {
+            if (!canEditActiveList()) {
+                showToast("צפייה בלבד - אין לך הרשאת עריכה לרשימה זו", "error");
+                return;
+            }
+            try {
+                const itemRef = doc(getItemsCollectionRef(), itemId);
+                await deleteDoc(itemRef);
+                showToast("המוצר נמחק", "info");
+            } catch (err) {
+                console.error("Error deleting item:", err);
+                showToast("שגיאה במחיקת המוצר", "error");
+            }
+        };
+
+        // Join Existing List via Code (manual form in Share modal)
+        window.handleJoinList = async function(e) {
+            e.preventDefault();
+            const code = document.getElementById('joinCodeInput').value.trim();
+            if (!code) return;
+
+            const success = await joinListByCode(code);
+            if (success) {
+                closeShareModal();
+                document.getElementById('joinCodeInput').value = '';
+            }
+        };
+
+        // Filter by Category Pills
+        window.setCategoryFilter = function(category) {
+            activeCategoryFilter = category;
+            
+            document.querySelectorAll('.cat-pill').forEach(btn => {
+                if (btn.dataset.cat === category) {
+                    btn.className = 'cat-pill px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition bg-darkBrand text-white shadow-sm';
+                } else {
+                    btn.className = 'cat-pill px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition bg-white text-slate-600 hover:bg-slate-200 border border-slate-200';
+                }
+            });
+
+            document.getElementById('filterLabel').innerText = category === 'all' ? '' : `סינון: ${category}`;
+            renderItems();
+        };
+
+        // Modals Controls
+        window.openAddItemModal = () => {
+            if (!canEditActiveList()) {
+                showToast("צפייה בלבד - אין לך הרשאת עריכה לרשימה זו", "error");
+                return;
+            }
+            editingItemId = null;
+            categoryAutoLocked = false;
+            document.getElementById('addItemForm').reset();
+            document.getElementById('itemModalTitle').innerText = 'הוספת מוצר לרשימה';
+            document.getElementById('itemModalIcon').className = 'fa-solid fa-cart-plus';
+            document.getElementById('itemModalSubmitIcon').className = 'fa-solid fa-plus text-skyBrand-400';
+            document.getElementById('itemModalSubmitText').innerText = 'הוסף לרשימה';
+            document.getElementById('addItemModal').classList.remove('hidden');
+        };
+        window.closeAddItemModal = () => {
+            editingItemId = null;
+            document.getElementById('addItemModal').classList.add('hidden');
+        };
+
+        window.openShareModal = () => document.getElementById('shareModal').classList.remove('hidden');
+        window.closeShareModal = () => document.getElementById('shareModal').classList.add('hidden');
+
+        window.openSettingsModal = () => document.getElementById('settingsModal').classList.remove('hidden');
+        window.closeSettingsModal = () => document.getElementById('settingsModal').classList.add('hidden');
+
+        window.openAuthModal = () => document.getElementById('authModal').classList.remove('hidden');
+        window.closeAuthModal = () => document.getElementById('authModal').classList.add('hidden');
+
+        window.toggleInCartVisibility = function() {
+            const list = document.getElementById('inCartList');
+            const chevron = document.getElementById('inCartChevron');
+            isInCartExpanded = !isInCartExpanded;
+            if (isInCartExpanded) {
+                list.classList.remove('hidden');
+                chevron.style.transform = 'rotate(0deg)';
+            } else {
+                list.classList.add('hidden');
+                chevron.style.transform = 'rotate(-90deg)';
+            }
+        };
+
+        window.handleToggleAddedBy = function(checked) {
+            showAddedBy = checked;
+            renderItems();
+        };
+
+        window.copyListCode = function() {
+            if (!activeListId) return;
+            const el = document.createElement('textarea');
+            el.value = activeListId;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            showToast("קוד הרשימה הועתק ללוח!", "success");
+        };
+
+        // Build a shareable join link that auto-fills the list code when opened
+        function buildJoinLink() {
+            if (!activeListId) return window.location.href;
+            const url = new URL(window.location.href);
+            url.search = '';
+            url.hash = '';
+            url.searchParams.set('join', activeListId);
+            return url.toString();
+        }
+
+        function buildShareMessage() {
+            const listName = (userLists.find(l => l.id === activeListId) || {}).name || 'רשימת קניות';
+            const inviterName = currentUser?.displayName || 'מישהו מהמשפחה';
+            const link = buildJoinLink();
+            return `${inviterName} הזמין/ה אותך לרשימת הקניות המשותפת "${listName}" באפליקציית סופר-קל!
+
+לחצו על הקישור כדי להצטרף:
+${link}
+
+(או הזינו ידנית את הקוד: ${activeListId})`;
+        }
+
+        window.shareViaWhatsApp = function() {
+            if (!activeListId) {
+                showToast("אין רשימה פעילה לשיתוף", "error");
+                return;
+            }
+            const text = encodeURIComponent(buildShareMessage());
+            window.open(`https://wa.me/?text=${text}`, '_blank');
+        };
+
+        window.shareViaEmail = function() {
+            if (!activeListId) {
+                showToast("אין רשימה פעילה לשיתוף", "error");
+                return;
+            }
+            const listName = (userLists.find(l => l.id === activeListId) || {}).name || 'רשימת קניות';
+            const subject = encodeURIComponent(`הזמנה לרשימת קניות משותפת - ${listName}`);
+            const body = encodeURIComponent(buildShareMessage());
+            window.location.href = `mailto:?subject=${subject}&body=${body}`;
+        };
+
+        // Join a list automatically by its ID/code (used both by manual form & join links)
+        async function joinListByCode(code) {
+            try {
+                const snapshot = await getDocs(getListsCollectionRef());
+                const targetDoc = snapshot.docs.find(d => d.id === code);
+
+                if (!targetDoc) {
+                    showToast("רשימה לא נמצאה, בדוק את הקוד/קישור", "error");
+                    return false;
+                }
+
+                const listData = targetDoc.data();
+                const members = listData.members || [];
+                if (!members.includes(currentUser.uid)) {
+                    members.push(currentUser.uid);
+                    await updateDoc(doc(getListsCollectionRef(), code), { members });
+                }
+
+                activeListId = code;
+                showToast(`הצטרפת בהצלחה לרשימה "${listData.name || ''}"!`, "success");
+                return true;
+            } catch (err) {
+                console.error("Error joining list:", err);
+                showToast("נכשל בהצטרפות לרשימה", "error");
+                return false;
+            }
+        }
+
+        // If the app was opened via a share link (?join=CODE), join automatically once logged in
+        let pendingJoinCode = new URLSearchParams(window.location.search).get('join');
+        async function handlePendingJoinIfAny() {
+            if (!pendingJoinCode || !currentUser) return;
+            const code = pendingJoinCode;
+            pendingJoinCode = null;
+
+            // Clean the URL so refreshing doesn't re-trigger the join
+            const cleanUrl = new URL(window.location.href);
+            cleanUrl.searchParams.delete('join');
+            window.history.replaceState({}, '', cleanUrl.toString());
+
+            await joinListByCode(code);
+        }
+
+        window.confirmDeleteCurrentList = function() {
+            if (!activeListId) {
+                showToast("אין רשימה פעילה למחיקה", "error");
+                return;
+            }
+            if (!canEditActiveList()) {
+                showToast("צפייה בלבד - אינך יכול למחוק רשימה של משתמש אחר", "error");
+                return;
+            }
+
+            // Count how many items are currently in this list, to warn the user
+            const itemCount = Array.from(itemsMap.values()).filter(i => i.listId === activeListId).length;
+            const list = userLists.find(l => l.id === activeListId);
+            const listName = list ? list.name : 'הרשימה הנוכחית';
+
+            const textEl = document.getElementById('confirmDeleteText');
+            if (textEl) {
+                textEl.innerText = itemCount > 0
+                    ? `האם אתה בטוח שברצונך למחוק את הרשימה "${listName}"? היא מכילה ${itemCount} מוצרים - פעולה זו בלתי הפיכה ותמחק גם אותם.`
+                    : `האם אתה בטוח שברצונך למחוק את הרשימה "${listName}"? פעולה זו בלתי הפיכה.`;
+            }
+
+            document.getElementById('confirmDeleteModal').classList.remove('hidden');
+        };
+
+        window.closeConfirmDeleteModal = function() {
+            document.getElementById('confirmDeleteModal').classList.add('hidden');
+        };
+
+        window.executeDeleteCurrentList = async function() {
+            const listIdToDelete = activeListId;
+            if (!listIdToDelete) return;
+
+            try {
+                closeConfirmDeleteModal();
+                closeSettingsModal();
+
+                // Delete all items belonging to this list first
+                const itemsToDelete = Array.from(itemsMap.values()).filter(i => i.listId === listIdToDelete);
+                await Promise.all(itemsToDelete.map(i => deleteDoc(doc(getItemsCollectionRef(), i.id))));
+
+                // Then delete the list itself
+                await deleteDoc(doc(getListsCollectionRef(), listIdToDelete));
+
+                showToast("הרשימה וכל המוצרים שבה נמחקו", "info");
+            } catch (err) {
+                console.error("Failed to delete list:", err);
+                showToast("שגיאה במחיקת הרשימה", "error");
+            }
+        };
+
+        // Helper Toast Function
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            
+            const bg = type === 'success' ? 'bg-slate-900 text-skyBrand-400 border-skyBrand-500' :
+                       type === 'error' ? 'bg-red-900 text-white border-red-500' :
+                       'bg-slate-900 text-white border-slate-700';
+
+            toast.className = `${bg} border px-4 py-3 rounded-2xl shadow-xl text-xs font-bold flex items-center justify-between animate-fade-in pointer-events-auto`;
+            toast.innerHTML = `
+                <span>${escapeHtml(message)}</span>
+                <i class="fa-solid fa-circle-info mr-2"></i>
+            `;
+
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Register Service Worker for PWA (offline shell + installability)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch((err) => {
+                    console.warn('Service worker registration failed:', err);
+                });
+            });
+        }
+    </script>
+</body>
+</html>
