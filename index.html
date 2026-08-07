@@ -232,8 +232,20 @@
                 </div>
             </header>
 
-            <!-- Filter Categories Scroll Bar -->
-            <div class="bg-slate-100 border-b border-slate-200/80 p-2.5 overflow-x-auto custom-scrollbar flex items-center gap-2 sticky top-[108px] z-20">
+            <!-- Search + Filter Categories Bar -->
+            <div class="bg-slate-100 border-b border-slate-200/80 sticky top-[108px] z-20">
+                <!-- Search Input -->
+                <div class="px-2.5 pt-2.5 pb-1.5">
+                    <div class="relative">
+                        <i class="fa-solid fa-magnifying-glass absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+                        <input type="text" id="searchInput" oninput="handleSearchInput(this.value)" placeholder="חיפוש מוצר ברשימה..." class="w-full bg-white border border-slate-200 rounded-xl py-2 pr-9 pl-8 text-sm focus:outline-none focus:border-skyBrand-500 transition">
+                        <button id="searchClearBtn" onclick="clearSearch()" class="hidden absolute left-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-500 flex items-center justify-center transition">
+                            <i class="fa-solid fa-xmark text-[10px]"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="p-2.5 pt-1 overflow-x-auto custom-scrollbar flex items-center gap-2">
                 <button onclick="setCategoryFilter('all')" data-cat="all" class="cat-pill px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition bg-darkBrand text-white shadow-sm">
                     הכל
                 </button>
@@ -261,6 +273,7 @@
                 <button onclick="setCategoryFilter('אחר')" data-cat="אחר" class="cat-pill px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition bg-white text-slate-600 hover:bg-slate-200 border border-slate-200">
                     📦 אחר
                 </button>
+                </div>
             </div>
 
             <!-- Main Items Display Area -->
@@ -618,6 +631,7 @@
         let currentUser = null;
         let activeListId = null;
         let activeCategoryFilter = 'all';
+        let searchQuery = '';
         let showAddedBy = true;
         let isInCartExpanded = true;
         let isAdmin = false;
@@ -1145,10 +1159,15 @@
             }
 
             const items = Array.from(itemsMap.values());
+            const trimmedQuery = searchQuery.trim();
 
             const filteredItems = items.filter(item => {
-                if (activeCategoryFilter === 'all') return true;
-                return item.category === activeCategoryFilter;
+                if (activeCategoryFilter !== 'all' && item.category !== activeCategoryFilter) return false;
+                if (trimmedQuery) {
+                    const haystack = `${item.name || ''} ${item.notes || ''}`;
+                    if (!haystack.includes(trimmedQuery)) return false;
+                }
+                return true;
             });
 
             const pending = filteredItems.filter(i => i.status !== 'in_cart');
@@ -1159,6 +1178,15 @@
 
             if (pending.length === 0) {
                 emptyState.classList.remove('hidden');
+                const emptyTitle = emptyState.querySelector('h3');
+                const emptyText = emptyState.querySelector('p');
+                if (trimmedQuery || activeCategoryFilter !== 'all') {
+                    if (emptyTitle) emptyTitle.innerText = 'לא נמצאו מוצרים';
+                    if (emptyText) emptyText.innerText = 'נסה לחפש משהו אחר או לנקות את הסינון.';
+                } else {
+                    if (emptyTitle) emptyTitle.innerText = 'הרשימה ריקה';
+                    if (emptyText) emptyText.innerHTML = 'לחצו על כפתור הפלוס (<span class="font-bold text-skyBrand-600">+</span>) למטה כדי להוסיף מצרכים לרשימה!';
+                }
             } else {
                 emptyState.classList.add('hidden');
                 appendGroupedItems(pendingContainer, pending, false);
@@ -1421,6 +1449,23 @@
             });
 
             document.getElementById('filterLabel').innerText = category === 'all' ? '' : `סינון: ${category}`;
+            renderItems();
+        };
+
+        // Search box handlers
+        window.handleSearchInput = function(value) {
+            searchQuery = value;
+            const clearBtn = document.getElementById('searchClearBtn');
+            if (clearBtn) clearBtn.classList.toggle('hidden', !value);
+            renderItems();
+        };
+
+        window.clearSearch = function() {
+            searchQuery = '';
+            const input = document.getElementById('searchInput');
+            if (input) input.value = '';
+            const clearBtn = document.getElementById('searchClearBtn');
+            if (clearBtn) clearBtn.classList.add('hidden');
             renderItems();
         };
 
